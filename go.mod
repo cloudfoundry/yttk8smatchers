@@ -1,4 +1,4 @@
-module code.cloudfoundry.org/ytt-k8s-matchers
+module code.cloudfoundry.org/yttk8smatchers
 
 go 1.14
 
