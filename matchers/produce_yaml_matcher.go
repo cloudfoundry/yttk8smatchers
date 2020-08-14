@@ -2,16 +2,15 @@ package matchers
 
 import (
 	"fmt"
+	"os/exec"
+	"reflect"
+	"regexp"
+
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/gomega/format"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/types"
-	"os/exec"
-	"reflect"
-	"regexp"
-
-	"k8s.io/client-go/kubernetes/scheme"
 )
 
 type ProduceYAMLMatcher struct {
@@ -81,10 +80,8 @@ func renderWithData(templates []string, data map[string]string) (*gexec.Session,
 }
 
 func parseYAML(yaml *gbytes.Buffer) (interface{}, error) {
-	// TODO: Look at extending UniversalDeserializer Scheme with CRDs.
-	decode := scheme.Codecs.UniversalDeserializer().Decode
-
 	apiObjects := map[string]interface{}{}
+	decode := GetDecoder().Decode
 
 	// for each document
 	ptn := regexp.MustCompile(`(?m)^---\s*$`)
