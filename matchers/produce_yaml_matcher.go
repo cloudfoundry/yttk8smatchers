@@ -2,15 +2,14 @@ package matchers
 
 import (
 	"fmt"
-	"os/exec"
-	"reflect"
-	"strings"
-
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/gomega/format"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/types"
+	"os/exec"
+	"reflect"
+	"regexp"
 
 	"k8s.io/client-go/kubernetes/scheme"
 )
@@ -88,7 +87,8 @@ func parseYAML(yaml *gbytes.Buffer) (interface{}, error) {
 	apiObjects := map[string]interface{}{}
 
 	// for each document
-	docStrings := strings.Split(string(yaml.Contents()), "---")
+	ptn := regexp.MustCompile(`(?m)^---\s*$`)
+	docStrings := ptn.Split(string(yaml.Contents()), -1)
 	for _, docString := range docStrings {
 		// Checks for empty documents
 		if docString == "" {
