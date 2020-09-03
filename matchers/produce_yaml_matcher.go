@@ -1,6 +1,7 @@
 package matchers
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"reflect"
@@ -16,10 +17,11 @@ import (
 type ProduceYAMLMatcher struct {
 	matcher  types.GomegaMatcher
 	rendered string
+	yttError error
 }
 
 func ProduceYAML(matcher types.GomegaMatcher) *ProduceYAMLMatcher {
-	return &ProduceYAMLMatcher{matcher, ""}
+	return &ProduceYAMLMatcher{matcher, "", nil}
 }
 
 func (matcher *ProduceYAMLMatcher) Match(actual interface{}) (bool, error) {
@@ -34,6 +36,12 @@ func (matcher *ProduceYAMLMatcher) Match(actual interface{}) (bool, error) {
 	}
 
 	matcher.rendered = string(session.Out.Contents())
+
+	if session.ExitCode() != 0 {
+		matcher.yttError = errors.New(string(session.Err.Contents()))
+		return matcher.matcher.Match(matcher.yttError)
+	}
+
 	docsMap, err := parseYAML(session.Out)
 	if err != nil {
 		return false, err
