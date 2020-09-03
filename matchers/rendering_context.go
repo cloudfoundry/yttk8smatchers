@@ -2,10 +2,10 @@ package matchers
 
 type RenderingContext struct {
 	templates []string
-	data      map[string]string
+	data      map[string]interface{}
 }
 
-func (r RenderingContext) WithData(data map[string]string) RenderingContext {
+func (r RenderingContext) WithData(data map[string]interface{}) RenderingContext {
 	r.data = data
 	return r
 }
