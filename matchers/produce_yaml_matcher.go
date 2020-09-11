@@ -60,15 +60,24 @@ func (matcher *ProduceYAMLMatcher) NegatedFailureMessage(actual interface{}) str
 	return msg
 }
 
-func renderWithData(templates []string, data map[string]string) (*gexec.Session, error) {
+func renderWithData(templates []string, data map[string]interface{}) (*gexec.Session, error) {
 	var args []string
 	for _, template := range templates {
 		args = append(args, "-f", template)
 	}
 
-	for k, v := range data {
-		args = append(args, "-v", fmt.Sprintf("%s=%s", k, v))
-	}
+	for k, i := range data {
+		switch v := i.(type) {
+		case bool:
+				args = append(args, "--data-value-yaml", fmt.Sprintf("%s=%t", k, v))
+		case int:
+				args = append(args, "--data-value-yaml", fmt.Sprintf("%s=%d", k, v))
+		case string:
+				args = append(args, "--data-value-yaml", fmt.Sprintf("%s=%q", k, v))
+		default:
+				return nil, fmt.Errorf("Unsupported data value type for key %q: %T", k, v)
+		}
+}
 
 	command := exec.Command("ytt", args...)
 	session, err := gexec.Start(command, nil, GinkgoWriter)
