@@ -1,6 +1,7 @@
 package matchers
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"reflect"
@@ -29,11 +30,16 @@ func (matcher *ProduceYAMLMatcher) Match(actual interface{}) (bool, error) {
 	}
 
 	session, err := renderWithData(rendering.templates, rendering.data)
-	if err != nil || session.ExitCode() != 0 {
+	if err != nil {
 		return false, fmt.Errorf("render error, exit status={%v}, command={%s}, error={%v}", session.ExitCode(), session.Command, err)
 	}
 
 	matcher.rendered = string(session.Out.Contents())
+
+	if session.ExitCode() != 0 {
+		return matcher.matcher.Match(errors.New(string(session.Err.Contents())))
+	}
+
 	docsMap, err := parseYAML(session.Out)
 	if err != nil {
 		return false, err
@@ -103,7 +109,7 @@ func parseYAML(yaml *gbytes.Buffer) (interface{}, error) {
 
 		obj, gk, err := decode([]byte(docString), nil, nil)
 		if err != nil {
-			return nil, err
+			continue
 		}
 
 		apiObjects[gk.Kind+"/"+reflect.ValueOf(obj).Elem().FieldByName("Name").String()] = obj
