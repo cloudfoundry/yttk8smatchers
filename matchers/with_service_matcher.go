@@ -2,18 +2,22 @@ package matchers
 
 import (
 	"fmt"
+
 	"github.com/onsi/gomega/format"
+	"github.com/onsi/gomega/gstruct"
 	"github.com/onsi/gomega/types"
 	v1 "k8s.io/api/core/v1"
 )
 
 type WithServiceMatcher struct {
-	name string
+	name           string
 	serviceMatcher *ServiceMatcher
+
+	data gstruct.Keys
 }
 
 func WithService(name string) *WithServiceMatcher {
-	return &WithServiceMatcher{name, RepresentingAService()}
+	return &WithServiceMatcher{name: name, serviceMatcher: RepresentingAService()}
 }
 
 func (matcher *WithServiceMatcher) Match(actual interface{}) (bool, error) {
@@ -61,8 +65,13 @@ func (matcher *WithServiceMatcher) WithType(value string) types.GomegaMatcher {
 	return matcher
 }
 
+func (matcher *WithServiceMatcher) WithData(dm gstruct.Keys) *WithServiceMatcher {
+	matcher.data = dm
+	return matcher
+}
+
 type WithoutServiceMatcher struct {
-	name                 string
+	name               string
 	withServiceMatcher *WithServiceMatcher
 }
 
