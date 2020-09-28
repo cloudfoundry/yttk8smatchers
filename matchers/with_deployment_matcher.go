@@ -85,9 +85,9 @@ func (matcher *WithDeploymentMatcher) FailureMessage(actual interface{}) string 
 func (matcher *WithDeploymentMatcher) NegatedFailureMessage(actual interface{}) string {
 	if matcher.failedMatcher == nil {
 		msg := fmt.Sprintf(
-			"FailureMessage: A deployment with name %q exists",
+			"FailureMessage: A deployment with name %q exists and/or the spec yaml was not correct %v",
 			matcher.name,
-		)
+			matcher.specYaml)
 		return msg
 	}
 	return matcher.failedMatcher.NegatedFailureMessage(matcher.failedMatcherActual)
