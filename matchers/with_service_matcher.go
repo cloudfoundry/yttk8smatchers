@@ -15,10 +15,10 @@ type WithServiceMatcher struct {
 	name                string
 	serviceMatcher      *ServiceMatcher
 	specYaml            string
+	exactSpecYaml       string
 	data                gstruct.Keys
 	failedMatcher       types.GomegaMatcher
 	failedMatcherActual interface{}
-	exactSpecMatcher    bool
 }
 
 func WithService(name string) *WithServiceMatcher {
@@ -31,8 +31,7 @@ func (matcher *WithServiceMatcher) WithSpecYaml(yaml string) *WithServiceMatcher
 }
 
 func (matcher *WithServiceMatcher) WithExactSpecYaml(yaml string) *WithServiceMatcher {
-	matcher.specYaml = yaml
-	matcher.exactSpecMatcher = true
+	matcher.exactSpecYaml = yaml
 	return matcher
 }
 
@@ -55,18 +54,25 @@ func (matcher *WithServiceMatcher) Match(actual interface{}) (bool, error) {
 		return ok, err
 	}
 
-	if matcher.specYaml != "" {
-		serviceSpecYaml, err := yaml.Marshal(typedService.Spec)
-		if err != nil {
-			return false, err
-		}
+	serviceSpecYaml, err := yaml.Marshal(typedService.Spec)
+	if err != nil {
+		return false, err
+	}
 
-		var yamlMatcher types.GomegaMatcher
-		if matcher.exactSpecMatcher {
-			yamlMatcher = unmarshalledmatchers.MatchUnorderedYAML(matcher.specYaml)
-		} else {
-			yamlMatcher = unmarshalledmatchers.ContainUnorderedYAML(matcher.specYaml)
+	if matcher.specYaml != "" {
+		yamlMatcher := unmarshalledmatchers.ContainUnorderedYAML(matcher.specYaml)
+
+		ok, err = yamlMatcher.Match(serviceSpecYaml)
+		if !ok || err != nil {
+			matcher.failedMatcher = yamlMatcher
+			matcher.failedMatcherActual = serviceSpecYaml
+			return ok, err
 		}
+	}
+
+	if matcher.exactSpecYaml != "" {
+		yamlMatcher := unmarshalledmatchers.MatchUnorderedYAML(matcher.exactSpecYaml)
+
 		ok, err = yamlMatcher.Match(serviceSpecYaml)
 		if !ok || err != nil {
 			matcher.failedMatcher = yamlMatcher
