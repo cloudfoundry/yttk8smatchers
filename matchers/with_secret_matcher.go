@@ -4,16 +4,23 @@ import (
 	"fmt"
 	"github.com/onsi/gomega/format"
 	"github.com/onsi/gomega/types"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 )
 
 type WithSecretMatcher struct {
 	name string
+	metas []types.GomegaMatcher
 	secretMatcher *SecretMatcher
+	failedMatcher                             types.GomegaMatcher
+	failedMatcherActual                       interface{}
 }
 
-func WithSecret(name string) *WithSecretMatcher {
-	return &WithSecretMatcher{name, RepresentingASecret()}
+func WithSecret(name string, ns string) *WithSecretMatcher {
+	meta := NewObjectMetaMatcher()
+	meta.WithNamespace(ns)
+	var metas []types.GomegaMatcher
+	metas = append(metas, meta)
+	return &WithSecretMatcher{name: name, metas: metas, secretMatcher: RepresentingASecret()}
 }
 
 func (matcher *WithSecretMatcher) Match(actual interface{}) (bool, error) {
@@ -22,12 +29,21 @@ func (matcher *WithSecretMatcher) Match(actual interface{}) (bool, error) {
 		return false, fmt.Errorf("YAMLDocument must be passed a map[string]interface{}. Got\n%s", format.Object(actual, 1))
 	}
 
-	value, ok := docsMap["Secret/"+matcher.name]
+	secret, ok := docsMap["Secret/"+matcher.name]
 	if !ok {
 		return false, nil
 	}
 
-	return matcher.secretMatcher.Match(value.(*v1.Secret))
+	typedSecret, _ := secret.(*v1.Secret)
+
+	for _, meta := range matcher.metas {
+		ok, err := meta.Match(typedSecret.ObjectMeta)
+		if !ok || err != nil {
+			matcher.failedMatcher = meta
+			return ok, err
+		}
+	}
+	return matcher.secretMatcher.Match(typedSecret)
 }
 
 func (matcher *WithSecretMatcher) FailureMessage(actual interface{}) string {
@@ -58,6 +74,11 @@ func (matcher *WithSecretMatcher) NegatedFailureMessage(actual interface{}) stri
 
 func (matcher *WithSecretMatcher) WithDataValue(key string, expectedBase64DecodedValue []byte) types.GomegaMatcher {
 	matcher.secretMatcher.WithData(key, expectedBase64DecodedValue)
+	return matcher
+}
+
+func (matcher *WithSecretMatcher) WithStringDataValue(key string, secretValue string) types.GomegaMatcher {
+	matcher.secretMatcher.WithStringData(key, secretValue)
 	return matcher
 }
 

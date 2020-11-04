@@ -51,6 +51,9 @@ func (matcher *SecretMatcher) Match(actual interface{}) (success bool, err error
 	if !ok {
 		return false, fmt.Errorf("Expected a secret. Got\n%s", format.Object(actual, 1))
 	}
+	if secret == nil {
+		return false, fmt.Errorf("secret matcher: secret is nil")
+	}
 
 	if matcher.stringData != nil {
 		matcher.executed = matcher.stringData
@@ -75,7 +78,10 @@ func (matcher *SecretMatcher) Match(actual interface{}) (success bool, err error
 }
 
 func (matcher *SecretMatcher) FailureMessage(actual interface{}) string {
-	return matcher.executed.FailureMessage(actual)
+	if matcher.executed != nil {
+		return matcher.executed.FailureMessage(actual)
+	}
+	return "FailureMessage: Possibly missing .WithDataValue or .WithStringDataValue method in the test."
 }
 
 func (matcher *SecretMatcher) NegatedFailureMessage(actual interface{}) string {
