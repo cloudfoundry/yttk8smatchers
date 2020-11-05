@@ -16,10 +16,12 @@ type WithSecretMatcher struct {
 }
 
 func WithSecret(name string, ns string) *WithSecretMatcher {
-	meta := NewObjectMetaMatcher()
-	meta.WithNamespace(ns)
 	var metas []types.GomegaMatcher
-	metas = append(metas, meta)
+	if len(ns) > 0 {
+		meta := NewObjectMetaMatcher()
+		meta.WithNamespace(ns)
+		metas = append(metas, meta)
+	}
 	return &WithSecretMatcher{name: name, metas: metas, secretMatcher: RepresentingASecret()}
 }
 
