@@ -1,6 +1,7 @@
 package matchers
 
 import (
+	qsv1a1 "code.cloudfoundry.org/quarks-secret/pkg/kube/apis/quarkssecret/v1alpha1"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
@@ -15,6 +16,7 @@ func GetDecoder() runtime.Decoder {
 	networkingv1alpha3.AddToScheme(scheme.Scheme)
 	networkingv1beta1.AddToScheme(scheme.Scheme)
 	securityv1beta1.AddToScheme(scheme.Scheme)
+	qsv1a1.AddToScheme(scheme.Scheme)
 
 	return scheme.Codecs.UniversalDeserializer()
 }
