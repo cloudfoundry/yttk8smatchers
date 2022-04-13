@@ -5,6 +5,7 @@ go 1.14
 require (
 	code.cloudfoundry.org/quarks-secret v1.0.752
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
 	github.com/otiai10/copy v1.2.0
